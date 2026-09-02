@@ -1,0 +1,205 @@
+{
+  "phrases": [
+    {
+      "id": "first-phrase",
+      "title": "First Phrase",
+      "detail": "A hill that rises and falls. The land is this melody.",
+      "tempo": 72,
+      "corridorHalfWidth": 0.18,
+      "isFree": true,
+      "notes": [
+        { "midi": 60, "beats": 2 },
+        { "midi": 62, "beats": 2 },
+        { "midi": 64, "beats": 2 },
+        { "midi": 62, "beats": 2 },
+        { "midi": 60, "beats": 2 }
+      ]
+    },
+    {
+      "id": "held-valley",
+      "title": "Held Valley",
+      "detail": "Long notes. Hold still. A valley is a drone.",
+      "tempo": 68,
+      "corridorHalfWidth": 0.16,
+      "isFree": true,
+      "notes": [
+        { "midi": 62, "beats": 4 },
+        { "midi": 64, "beats": 3 },
+        { "midi": 62, "beats": 4 }
+      ]
+    },
+    {
+      "id": "stepwise-hill",
+      "title": "Stepwise Hill",
+      "detail": "Walk a scale. Each step is a terrace.",
+      "tempo": 80,
+      "corridorHalfWidth": 0.15,
+      "isFree": true,
+      "notes": [
+        { "midi": 60, "beats": 1 },
+        { "midi": 62, "beats": 1 },
+        { "midi": 64, "beats": 1 },
+        { "midi": 65, "beats": 1 },
+        { "midi": 67, "beats": 2 },
+        { "midi": 65, "beats": 1 },
+        { "midi": 64, "beats": 1 },
+        { "midi": 62, "beats": 1 },
+        { "midi": 60, "beats": 2 }
+      ]
+    },
+    {
+      "id": "small-leap",
+      "title": "Small Leap",
+      "detail": "Thirds. Hop with your voice, not your thumb.",
+      "tempo": 84,
+      "corridorHalfWidth": 0.14,
+      "isFree": true,
+      "notes": [
+        { "midi": 60, "beats": 1.5 },
+        { "midi": 64, "beats": 1.5 },
+        { "midi": 62, "beats": 1.5 },
+        { "midi": 65, "beats": 1.5 },
+        { "midi": 64, "beats": 2 },
+        { "midi": 60, "beats": 2 }
+      ]
+    },
+    {
+      "id": "fifth-cliff",
+      "title": "Fifth Cliff",
+      "detail": "A leap of a fifth is a mountain. Jump it.",
+      "tempo": 76,
+      "corridorHalfWidth": 0.13,
+      "isFree": false,
+      "notes": [
+        { "midi": 60, "beats": 2 },
+        { "midi": 67, "beats": 2 },
+        { "midi": 64, "beats": 2 },
+        { "midi": 72, "beats": 2 },
+        { "midi": 67, "beats": 2 },
+        { "midi": 60, "beats": 2 }
+      ]
+    },
+    {
+      "id": "narrow-path",
+      "title": "Narrow Path",
+      "detail": "Same hill as the first phrase, thinner ribbon.",
+      "tempo": 72,
+      "corridorHalfWidth": 0.09,
+      "isFree": false,
+      "notes": [
+        { "midi": 60, "beats": 2 },
+        { "midi": 62, "beats": 2 },
+        { "midi": 64, "beats": 2 },
+        { "midi": 62, "beats": 2 },
+        { "midi": 60, "beats": 2 }
+      ]
+    },
+    {
+      "id": "faster-pulse",
+      "title": "Faster Pulse",
+      "detail": "The song is quicker. Your voice has less time to settle.",
+      "tempo": 112,
+      "corridorHalfWidth": 0.13,
+      "isFree": false,
+      "notes": [
+        { "midi": 60, "beats": 1 },
+        { "midi": 62, "beats": 1 },
+        { "midi": 64, "beats": 1 },
+        { "midi": 67, "beats": 1 },
+        { "midi": 64, "beats": 1 },
+        { "midi": 62, "beats": 1 },
+        { "midi": 60, "beats": 2 }
+      ]
+    },
+    {
+      "id": "two-valleys",
+      "title": "Two Valleys",
+      "detail": "Two held bowls with a ridge between them.",
+      "tempo": 78,
+      "corridorHalfWidth": 0.12,
+      "isFree": false,
+      "notes": [
+        { "midi": 60, "beats": 3 },
+        { "midi": 64, "beats": 1 },
+        { "midi": 62, "beats": 3 },
+        { "midi": 67, "beats": 1 },
+        { "midi": 64, "beats": 2 },
+        { "midi": 60, "beats": 2 }
+      ]
+    },
+    {
+      "id": "question",
+      "title": "Question",
+      "detail": "Rise as if asking, then settle the answer.",
+      "tempo": 86,
+      "corridorHalfWidth": 0.12,
+      "isFree": false,
+      "notes": [
+        { "midi": 62, "beats": 1 },
+        { "midi": 64, "beats": 1 },
+        { "midi": 65, "beats": 1 },
+        { "midi": 67, "beats": 1 },
+        { "midi": 69, "beats": 2 },
+        { "midi": 65, "beats": 2 },
+        { "midi": 62, "beats": 2 }
+      ]
+    },
+    {
+      "id": "whistle-ridge",
+      "title": "Whistle Ridge",
+      "detail": "Higher line. Calibration still maps it to your range.",
+      "tempo": 88,
+      "corridorHalfWidth": 0.11,
+      "isFree": false,
+      "notes": [
+        { "midi": 67, "beats": 1 },
+        { "midi": 69, "beats": 1 },
+        { "midi": 71, "beats": 1 },
+        { "midi": 72, "beats": 2 },
+        { "midi": 74, "beats": 1 },
+        { "midi": 72, "beats": 1 },
+        { "midi": 69, "beats": 1 },
+        { "midi": 67, "beats": 2 }
+      ]
+    },
+    {
+      "id": "long-line",
+      "title": "Long Line",
+      "detail": "A longer phrase. Breath is the hazard.",
+      "tempo": 82,
+      "corridorHalfWidth": 0.11,
+      "isFree": false,
+      "notes": [
+        { "midi": 60, "beats": 2 },
+        { "midi": 62, "beats": 1 },
+        { "midi": 64, "beats": 2 },
+        { "midi": 65, "beats": 1 },
+        { "midi": 67, "beats": 2 },
+        { "midi": 64, "beats": 2 },
+        { "midi": 62, "beats": 1 },
+        { "midi": 60, "beats": 2 },
+        { "midi": 64, "beats": 1 },
+        { "midi": 67, "beats": 2 },
+        { "midi": 60, "beats": 2 }
+      ]
+    },
+    {
+      "id": "the-score",
+      "title": "The Score",
+      "detail": "The signature piece: fifths, a fall, a last held valley.",
+      "tempo": 80,
+      "corridorHalfWidth": 0.10,
+      "isFree": false,
+      "notes": [
+        { "midi": 60, "beats": 1.5 },
+        { "midi": 67, "beats": 1.5 },
+        { "midi": 64, "beats": 1 },
+        { "midi": 71, "beats": 2 },
+        { "midi": 67, "beats": 1.5 },
+        { "midi": 72, "beats": 1.5 },
+        { "midi": 64, "beats": 2 },
+        { "midi": 60, "beats": 3 }
+      ]
+    }
+  ]
+}
