@@ -43,6 +43,7 @@ struct MenuView: View {
                     VStack(spacing: 10) {
                         Button("How to play") {
                             FeedbackManager.shared.play(.buttonTap)
+                            HumlineAnalytics.signal("Menu.howToPlay")
                             cover = .onboarding
                         }
                         .buttonStyle(.bordered)
@@ -50,6 +51,7 @@ struct MenuView: View {
 
                         Button("Pitch gym") {
                             FeedbackManager.shared.play(.buttonTap)
+                            HumlineAnalytics.signal("Menu.pitchGym")
                             cover = .gym
                         }
                         .buttonStyle(.bordered)
@@ -79,10 +81,12 @@ struct MenuView: View {
                                 .lineLimit(nil)
                                 .fixedSize(horizontal: false, vertical: true)
                             Button("Unlock \(phraseStore.priceText)") {
+                                HumlineAnalytics.signal("Store.phrasePack.tapped")
                                 Task { await phraseStore.purchase() }
                             }
                             .buttonStyle(.borderedProminent)
                             Button("Restore purchases") {
+                                HumlineAnalytics.signal("Store.restore.tapped")
                                 Task { await phraseStore.restore() }
                             }
                             .font(.caption)
@@ -132,7 +136,7 @@ struct MenuView: View {
         phrases = MelodyLibrary.loadBundled()
         if let pendingStart {
             self.pendingStart = nil
-            DispatchQueue.main.async {
+            Task { @MainActor in
                 pendingStart()
             }
         }

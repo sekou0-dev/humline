@@ -6,10 +6,12 @@ struct HumlineApp: App {
     @State private var incomingFlight: SharedFlight?
 
     init() {
+        HumlineAnalytics.start()
         let arguments = ProcessInfo.processInfo.arguments
         if arguments.contains("-ui-testing") {
             AppSettings.hasCompletedOnboarding = true
-            AppSettings.debugUnlockAll = true
+            AppSettings.debugUnlockAll = !arguments.contains("-keep-locked")
+            VoiceCalibrationStore.save(.fallbackHum)
         }
     }
 

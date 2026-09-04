@@ -54,6 +54,9 @@ struct GameContainerView: View {
                 CalibrationView(tracker: controller.tracker, mode: controller.inputMode) { calibration in
                     controller.calibration = calibration
                     VoiceCalibrationStore.save(calibration)
+                    HumlineAnalytics.signal("Calibration.completed", parameters: [
+                        "inputMode": controller.inputMode.rawValue,
+                    ])
                     showCalibration = false
                     controller.arm()
                 }
@@ -102,6 +105,11 @@ struct GameContainerView: View {
             return
         }
         sharePayload = SharePayload(url: url)
+        HumlineAnalytics.signal("Flight.shared", parameters: [
+            "melodyId": controller.melody.id,
+            "title": controller.melody.title,
+            "inputMode": controller.inputMode.rawValue,
+        ])
     }
 
     private func cleanupShareFile() {
