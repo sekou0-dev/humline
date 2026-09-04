@@ -70,6 +70,28 @@ struct VoiceCalibrationTests {
     }
 }
 
+struct OnboardingCopyTests {
+    @Test func pagesCoverTheFullLoop() {
+        let pages = OnboardingPage.all
+        #expect(pages.count == 4)
+        #expect(pages.map(\.title) == [
+            "You are the instrument",
+            "The land is the melody",
+            "Find your range",
+            "The microphone stays here",
+        ])
+        for page in pages {
+            #expect(page.detail.count > 80)
+            #expect(!page.detail.contains("…"))
+            #expect(page.detail.hasSuffix("."))
+        }
+        #expect(pages[0].detail.contains("stalls"))
+        #expect(pages[1].detail.contains("gold ribbon"))
+        #expect(pages[2].detail.contains("comfortable low"))
+        #expect(pages[3].detail.contains("never uploaded"))
+    }
+}
+
 struct TerrainBuilderTests {
     @Test func corridorFollowsHeldNoteThenFifth() {
         let melody = Melody(

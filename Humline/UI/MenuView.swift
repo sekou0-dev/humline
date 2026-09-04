@@ -3,11 +3,23 @@ import SwiftUI
 struct MenuView: View {
     @EnvironmentObject private var phraseStore: PhraseStore
     @State private var phrases: [Melody] = MelodyLibrary.loadBundled()
-    @State private var activeController: FlightController?
-    @State private var showOnboarding = false
-    @State private var showGym = false
+    @State private var cover: Cover?
     @State private var pendingStart: (() -> Void)?
     @AppStorage("hapticsEnabled") private var hapticsEnabled = true
+
+    private enum Cover: Identifiable {
+        case onboarding
+        case gym
+        case game(FlightController)
+
+        var id: String {
+            switch self {
+            case .onboarding: "onboarding"
+            case .gym: "gym"
+            case .game(let controller): controller.id.uuidString
+            }
+        }
+    }
 
     var body: some View {
         NavigationStack {
@@ -19,6 +31,8 @@ struct MenuView: View {
                         Text("The land is the melody. You are the instrument.")
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
+                            .lineLimit(nil)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
                     .padding(.top, 12)
 
@@ -29,14 +43,14 @@ struct MenuView: View {
                     VStack(spacing: 10) {
                         Button("How to play") {
                             FeedbackManager.shared.play(.buttonTap)
-                            showOnboarding = true
+                            cover = .onboarding
                         }
                         .buttonStyle(.bordered)
                         .frame(maxWidth: .infinity)
 
                         Button("Pitch gym") {
                             FeedbackManager.shared.play(.buttonTap)
-                            showGym = true
+                            cover = .gym
                         }
                         .buttonStyle(.bordered)
                         .frame(maxWidth: .infinity)
@@ -62,6 +76,8 @@ struct MenuView: View {
                             Text("Eight more original phrases. No ads, no licensed songs.")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
+                                .lineLimit(nil)
+                                .fixedSize(horizontal: false, vertical: true)
                             Button("Unlock \(phraseStore.priceText)") {
                                 Task { await phraseStore.purchase() }
                             }
@@ -93,28 +109,32 @@ struct MenuView: View {
             .onAppear {
                 phrases = MelodyLibrary.loadBundled()
                 if !AppSettings.hasCompletedOnboarding {
-                    showOnboarding = true
+                    cover = .onboarding
                 }
             }
         }
-        .sheet(isPresented: $showOnboarding, onDismiss: {
-            if let pendingStart {
-                self.pendingStart = nil
+        .fullScreenCover(item: $cover, onDismiss: handleCoverDismiss) { item in
+            switch item {
+            case .onboarding:
+                OnboardingView()
+            case .gym:
+                PitchGymView()
+            case .game(let controller):
+                GameContainerView(controller: controller) {
+                    cover = nil
+                }
+                .interactiveDismissDisabled()
+            }
+        }
+    }
+
+    private func handleCoverDismiss() {
+        phrases = MelodyLibrary.loadBundled()
+        if let pendingStart {
+            self.pendingStart = nil
+            DispatchQueue.main.async {
                 pendingStart()
             }
-        }) {
-            OnboardingView()
-        }
-        .sheet(isPresented: $showGym) {
-            PitchGymView()
-        }
-        .fullScreenCover(item: $activeController, onDismiss: {
-            phrases = MelodyLibrary.loadBundled()
-        }) { controller in
-            GameContainerView(controller: controller) {
-                activeController = nil
-            }
-            .interactiveDismissDisabled()
         }
     }
 
@@ -122,13 +142,13 @@ struct MenuView: View {
         FeedbackManager.shared.play(.buttonTap)
         guard phraseStore.isUnlocked(melody) else { return }
         let start = {
-            activeController = FlightController(melody: melody)
+            cover = .game(FlightController(melody: melody))
         }
         if AppSettings.hasCompletedOnboarding {
             start()
         } else {
             pendingStart = start
-            showOnboarding = true
+            cover = .onboarding
         }
     }
 }
@@ -148,6 +168,8 @@ private struct PhraseRow: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.leading)
+                        .lineLimit(nil)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
                 Spacer()
                 if unlocked {

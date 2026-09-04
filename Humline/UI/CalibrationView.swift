@@ -8,45 +8,65 @@ struct CalibrationView: View {
     @State private var step: Step = .low
     @State private var captured: [Double] = []
     @State private var lowHz: Double?
-    @State private var message = "Hum a comfortable low note."
     @State private var elapsed: TimeInterval = 0
 
     private let captureLength: TimeInterval = 1.4
 
     enum Step {
         case low, high
+
+        var title: String {
+            switch self {
+            case .low: "Find your range"
+            case .high: "Now the high note"
+            }
+        }
+
+        var message: String {
+            switch self {
+            case .low:
+                "Hum a comfortable low note and hold it. Humline listens for about a second, then asks for a high note. This maps your voice onto the height of the land."
+            case .high:
+                "Now hum a comfortable high note and hold it. After this, the bottom of the corridor is your low, and the top is your high."
+            }
+        }
     }
 
     var body: some View {
-        VStack(spacing: 18) {
-            Text("Find your range")
-                .font(.title2.weight(.semibold))
-            Text(message)
-                .font(.body)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
+        ScrollView {
+            VStack(spacing: 16) {
+                Text(step.title)
+                    .font(.title2.weight(.semibold))
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
 
-            if let hz = tracker.latest.hz {
-                Text(String(format: "%.0f Hz", hz))
-                    .font(.system(.title, design: .monospaced).weight(.medium))
-                    .foregroundStyle(HumlineTheme.corridor)
-            } else {
-                Text("Listening…")
-                    .font(.title3)
-                    .foregroundStyle(.secondary)
+                InstructionText(text: step.message)
+
+                if let hz = tracker.latest.hz {
+                    Text(String(format: "%.0f Hz", hz))
+                        .font(.system(.title, design: .monospaced).weight(.medium))
+                        .foregroundStyle(HumlineTheme.corridor)
+                } else {
+                    Text("Listening for a steady tone…")
+                        .font(.title3)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
+                ProgressView(value: min(1, elapsed / captureLength))
+                    .tint(HumlineTheme.corridor)
+
+                InstructionText(text: mode.detail, font: .caption)
             }
-
-            ProgressView(value: min(1, elapsed / captureLength))
-                .tint(HumlineTheme.corridor)
-                .padding(.horizontal, 40)
-
-            Text(mode.detail)
-                .font(.caption)
-                .foregroundStyle(.secondary)
+            .padding(24)
+            .frame(maxWidth: 520)
+            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+            .padding(20)
+            .frame(maxWidth: .infinity)
         }
-        .padding(28)
-        .frame(maxWidth: 420)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .scrollBounceBehavior(.basedOnSize)
+        .safeAreaPadding()
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(HumlineTheme.sky.opacity(0.72).ignoresSafeArea())
         .onAppear {
@@ -72,7 +92,6 @@ struct CalibrationView: View {
         case .low:
             lowHz = median
             step = .high
-            message = "Now a comfortable high note."
         case .high:
             let low = lowHz ?? median / 1.6
             var calibration = VoiceCalibration(lowHz: min(low, median), highHz: max(low, median))

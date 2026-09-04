@@ -4,52 +4,21 @@ struct OnboardingView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var pageIndex = 0
 
-    private let demo = MelodyLibrary.fallbackPhrases[0]
+    private let pages: [OnboardingPage] = OnboardingPage.all
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 20) {
+            VStack(spacing: 8) {
                 TabView(selection: $pageIndex) {
-                    page(
-                        symbol: "waveform",
-                        title: "You are the instrument",
-                        detail: "The pitch of your voice is altitude. Hum low to skim. Rise and you climb. Go silent and you stall."
-                    )
-                    .tag(0)
-
-                    VStack(spacing: 16) {
-                        MelodyRibbonView(melody: demo)
-                            .frame(height: 120)
-                            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                            .padding(.horizontal, 24)
-                        Text("The land is the melody")
-                            .font(.title2.weight(.semibold))
-                        Text("This hill is the first phrase. A held note is a valley. A leap of a fifth is a cliff. Stay inside the ribbon.")
-                            .font(.body)
-                            .foregroundStyle(.secondary)
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal, 28)
+                    ForEach(Array(pages.enumerated()), id: \.element.id) { index, page in
+                        OnboardingPageCard(page: page)
+                            .tag(index)
                     }
-                    .tag(1)
-
-                    page(
-                        symbol: "mic",
-                        title: "The microphone stays here",
-                        detail: "Audio is processed on your iPhone and is never uploaded. Throat-hum is the default so you can play softly in public."
-                    )
-                    .tag(2)
-
-                    page(
-                        symbol: "square.and.arrow.up",
-                        title: "Beat a flight, not a score",
-                        detail: "A shared run is a recording of the pitch you flew. Someone else can race your ghost through the same song."
-                    )
-                    .tag(3)
                 }
                 .tabViewStyle(.page(indexDisplayMode: .always))
 
-                Button(pageIndex == 3 ? "Start playing" : "Next") {
-                    if pageIndex == 3 {
+                Button(isLastPage ? "Start playing" : "Next") {
+                    if isLastPage {
                         complete()
                     } else {
                         withAnimation { pageIndex += 1 }
@@ -57,15 +26,16 @@ struct OnboardingView: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .frame(maxWidth: .infinity)
-                .padding(.horizontal)
+                .padding(.horizontal, 24)
 
-                if pageIndex != 3 {
+                if !isLastPage {
                     Button("Skip") { complete() }
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
+                        .padding(.bottom, 4)
                 }
             }
-            .padding(.bottom, 24)
+            .padding(.bottom, 12)
             .background(HumlineTheme.sky.ignoresSafeArea())
             .foregroundStyle(HumlineTheme.ink)
             .navigationTitle("How to play")
@@ -77,28 +47,108 @@ struct OnboardingView: View {
             }
         }
         .preferredColorScheme(.dark)
+        .presentationDetents([.large])
+        .presentationDragIndicator(.visible)
     }
 
-    private func page(symbol: String, title: String, detail: String) -> some View {
-        VStack(spacing: 20) {
-            Image(systemName: symbol)
-                .font(.system(size: 52, weight: .light))
-                .foregroundStyle(HumlineTheme.corridor)
-                .padding(.top, 24)
-            Text(title)
-                .font(.title2.weight(.semibold))
-            Text(detail)
-                .font(.body)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 28)
-        }
+    private var isLastPage: Bool {
+        pageIndex == pages.count - 1
     }
 
     private func complete() {
         AppSettings.hasCompletedOnboarding = true
         FeedbackManager.shared.play(.buttonTap)
         dismiss()
+    }
+}
+
+struct OnboardingPage: Identifiable {
+    var id: String { title }
+    var symbol: String
+    var title: String
+    var detail: String
+    var showsRibbon: Bool = false
+
+    static let all: [OnboardingPage] = [
+        OnboardingPage(
+            symbol: "waveform",
+            title: "You are the instrument",
+            detail: "The pitch of your voice is altitude. Hum a low note to fly low. Hum higher to climb. If you go silent, the craft stalls — it does not hover."
+        ),
+        OnboardingPage(
+            symbol: "music.note.list",
+            title: "The land is the melody",
+            detail: "This hill is the first phrase, drawn as land. A held note is a valley. A leap of a fifth is a cliff. Stay inside the gold ribbon. Leave it and you crash.",
+            showsRibbon: true
+        ),
+        OnboardingPage(
+            symbol: "mic",
+            title: "Find your range",
+            detail: "Before the first flight you hum a comfortable low note, then a comfortable high note. Humline maps that range onto the phrase — you do not need concert pitch. Throat-hum is the default so you can play quietly."
+        ),
+        OnboardingPage(
+            symbol: "lock.iphone",
+            title: "The microphone stays here",
+            detail: "Audio is processed on this iPhone and is never uploaded. “Beat my flight” shares a pitch envelope of the run, not a recording of your voice."
+        ),
+    ]
+}
+
+private struct OnboardingPageCard: View {
+    let page: OnboardingPage
+
+    var body: some View {
+        GeometryReader { geo in
+            ScrollView {
+                let compact = geo.size.height < 460
+                Group {
+                    if compact {
+                        HStack(alignment: .top, spacing: 20) {
+                            leadingVisual(compact: true)
+                            copyColumn(alignment: .leading)
+                        }
+                    } else {
+                        VStack(spacing: 16) {
+                            leadingVisual(compact: false)
+                            copyColumn(alignment: .center)
+                        }
+                    }
+                }
+                .padding(.horizontal, 24)
+                .padding(.vertical, 12)
+                .frame(minHeight: geo.size.height)
+            }
+            .scrollBounceBehavior(.basedOnSize)
+        }
+    }
+
+    @ViewBuilder
+    private func leadingVisual(compact: Bool) -> some View {
+        if page.showsRibbon {
+            MelodyRibbonView(melody: MelodyLibrary.fallbackPhrases[0])
+                .frame(width: compact ? 180 : nil, height: compact ? 88 : 96)
+                .frame(maxWidth: compact ? 180 : .infinity)
+                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .accessibilityLabel("A rising and falling hill shaped like the first phrase")
+        } else {
+            Image(systemName: page.symbol)
+                .font(.system(size: compact ? 36 : 48, weight: .light))
+                .foregroundStyle(HumlineTheme.corridor)
+                .frame(width: compact ? 48 : nil)
+                .accessibilityHidden(true)
+        }
+    }
+
+    private func copyColumn(alignment: TextAlignment) -> some View {
+        VStack(alignment: alignment == .leading ? .leading : .center, spacing: 10) {
+            Text(page.title)
+                .font(.title2.weight(.semibold))
+                .multilineTextAlignment(alignment)
+                .lineLimit(nil)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: alignment == .leading ? .leading : .center)
+            InstructionText(text: page.detail, alignment: alignment)
+        }
     }
 }
 
