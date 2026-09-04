@@ -16,54 +16,55 @@ struct GameContainerView: View {
     @State private var shareFailedMessage: String?
 
     var body: some View {
-        GeometryReader { geo in
-            ZStack {
-                HumlineTheme.sky.ignoresSafeArea()
-
-                if let scene {
-                    SpriteView(scene: scene)
-                        .ignoresSafeArea()
+        ZStack {
+            GeometryReader { geo in
+                ZStack {
+                    HumlineTheme.sky.ignoresSafeArea()
+                    if let scene {
+                        SpriteView(scene: scene)
+                            .ignoresSafeArea()
+                    }
                 }
-
-                VStack {
-                    HUDView(controller: controller, onMenu: onMenu)
-                    Spacer()
-                }
-
-                if controller.flightState.isTerminal {
-                    ResultsOverlay(
-                        state: controller.flightState,
-                        melodyTitle: controller.melody.title,
-                        onRetry: retry,
-                        onShare: shareFlight,
-                        onMenu: onMenu
-                    )
-                }
-
-                if showCalibration {
-                    CalibrationView(tracker: controller.tracker, mode: controller.inputMode) { calibration in
-                        controller.calibration = calibration
-                        VoiceCalibrationStore.save(calibration)
-                        showCalibration = false
+                .onAppear {
+                    bootScene(size: geo.size)
+                    controller.startMicrophone()
+                    if VoiceCalibrationStore.load()?.isValid != true {
+                        showCalibration = true
+                        controller.beginCalibration()
+                    } else {
                         controller.arm()
                     }
                 }
+                .onChange(of: geo.size) { _, size in
+                    bootScene(size: size)
+                }
             }
-            .onAppear {
-                bootScene(size: geo.size)
-                controller.startMicrophone()
-                if VoiceCalibrationStore.load()?.isValid != true {
-                    showCalibration = true
-                    controller.beginCalibration()
-                } else {
+
+            if controller.flightState.isTerminal {
+                ResultsOverlay(
+                    state: controller.flightState,
+                    melodyTitle: controller.melody.title,
+                    onRetry: retry,
+                    onShare: shareFlight,
+                    onMenu: onMenu
+                )
+            }
+
+            if showCalibration {
+                CalibrationView(tracker: controller.tracker, mode: controller.inputMode) { calibration in
+                    controller.calibration = calibration
+                    VoiceCalibrationStore.save(calibration)
+                    showCalibration = false
                     controller.arm()
                 }
             }
-            .onChange(of: geo.size) { _, size in
-                bootScene(size: size)
-            }
-            .onDisappear {
-                controller.stopMicrophone()
+        }
+        .onDisappear {
+            controller.stopMicrophone()
+        }
+        .safeAreaInset(edge: .top, spacing: 0) {
+            if !showCalibration, !controller.flightState.isTerminal {
+                HUDView(controller: controller, onMenu: onMenu)
             }
         }
         .statusBarHidden()

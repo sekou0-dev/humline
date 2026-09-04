@@ -7,53 +7,48 @@ struct PitchGymView: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 24) {
-                Picker("Input", selection: $mode) {
-                    ForEach(InputMode.allCases) { item in
-                        Text(item.title).tag(item)
+            ScrollView {
+                VStack(spacing: 20) {
+                    Picker("Input", selection: $mode) {
+                        ForEach(InputMode.allCases) { item in
+                            Text(item.title).tag(item)
+                        }
                     }
+                    .pickerStyle(.segmented)
+                    .onChange(of: mode) { _, newValue in
+                        tracker.mode = newValue
+                        AppSettings.inputMode = newValue
+                    }
+
+                    VStack(spacing: 8) {
+                        Text(hzText)
+                            .font(.system(size: 40, weight: .medium, design: .monospaced))
+                        Text(midiText)
+                            .font(.title3.monospacedDigit())
+                            .foregroundStyle(.secondary)
+                        Text(String(format: "RMS %.3f   conf %.2f", tracker.latest.rms, tracker.latest.confidence))
+                            .font(.caption.monospacedDigit())
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding(.top, 8)
+
+                    PitchNeedle(
+                        sung: sungNormalized,
+                        target: 0.5,
+                        halfWidth: 0.12
+                    )
+                    .frame(height: 40)
+
+                    InstructionText(text: mode.detail, font: .subheadline)
+
+                    InstructionText(
+                        text: "This gym proves the tracker before a flight. Hum or whistle a steady tone until the Hertz reading locks and stops jumping.",
+                        font: .caption
+                    )
                 }
-                .pickerStyle(.segmented)
-                .onChange(of: mode) { _, newValue in
-                    tracker.mode = newValue
-                    AppSettings.inputMode = newValue
-                }
-
-                VStack(spacing: 8) {
-                    Text(hzText)
-                        .font(.system(size: 44, weight: .medium, design: .monospaced))
-                    Text(midiText)
-                        .font(.title3.monospacedDigit())
-                        .foregroundStyle(.secondary)
-                    Text(String(format: "RMS %.3f   conf %.2f", tracker.latest.rms, tracker.latest.confidence))
-                        .font(.caption.monospacedDigit())
-                        .foregroundStyle(.secondary)
-                }
-                .padding(.top, 12)
-
-                PitchNeedle(
-                    sung: sungNormalized,
-                    target: 0.5,
-                    halfWidth: 0.12
-                )
-                .frame(height: 40)
-                .padding(.horizontal, 24)
-
-                Text(mode.detail)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal)
-
-                Text("This gym proves the tracker before a flight. Hum and whistle should lock to a stable Hz.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 28)
-
-                Spacer()
+                .padding(24)
             }
-            .padding()
+            .scrollBounceBehavior(.basedOnSize)
             .background(HumlineTheme.sky.ignoresSafeArea())
             .foregroundStyle(HumlineTheme.ink)
             .navigationTitle("Pitch gym")
@@ -72,6 +67,8 @@ struct PitchGymView: View {
             }
         }
         .preferredColorScheme(.dark)
+        .presentationDetents([.large])
+        .presentationDragIndicator(.visible)
     }
 
     private var hzText: String {

@@ -13,7 +13,7 @@ final class FlightController: ObservableObject, Identifiable {
     @Published private(set) var sungNormalized: Double = 0.5
     @Published private(set) var targetNormalized: Double = 0.5
     @Published private(set) var songTime: TimeInterval = 0
-    @Published private(set) var statusMessage = "Hum to stay inside the song."
+    @Published private(set) var statusMessage = "Hum to stay inside the gold ribbon. Match the written pitch as the land rises and falls."
     @Published var inputMode: InputMode {
         didSet {
             tracker.mode = inputMode
@@ -78,7 +78,7 @@ final class FlightController: ObservableObject, Identifiable {
                 self?.livePitch = reading
             }
         } catch {
-            statusMessage = "Microphone unavailable. On Simulator, drag vertically to fly."
+            statusMessage = "Microphone is unavailable. On Simulator, drag up and down on the screen to set pitch."
         }
     }
 
@@ -89,13 +89,13 @@ final class FlightController: ObservableObject, Identifiable {
 
     func beginCalibration() {
         flightState = .calibrating
-        statusMessage = "Find a comfortable low, then a high."
+        statusMessage = "Hum a comfortable low note, then a high note, so the land matches your range."
     }
 
     func arm() {
         resetRun(keepGhost: true)
         flightState = .armed
-        statusMessage = "Hum the opening note — then stay in the corridor."
+        statusMessage = "Hum the opening pitch, then stay inside the gold ribbon. Silence stalls. Leaving the ribbon crashes."
         awaitingVoice = true
     }
 
@@ -111,7 +111,7 @@ final class FlightController: ObservableObject, Identifiable {
         sungNormalized = opening.center
         targetNormalized = opening.center
         flightState = .idle
-        statusMessage = "Hum to stay inside the song."
+        statusMessage = "Hum to stay inside the gold ribbon. Match the written pitch as the land rises and falls."
         scene?.resetPlayhead()
     }
 
@@ -143,7 +143,7 @@ final class FlightController: ObservableObject, Identifiable {
             if voiced {
                 flightState = .flying
                 awaitingVoice = false
-                statusMessage = "Stay inside the melody."
+                statusMessage = "Stay inside the gold ribbon. Match the written pitch as the land rises and falls."
             } else {
                 scene?.updatePlayhead(
                     time: 0,
@@ -174,7 +174,7 @@ final class FlightController: ObservableObject, Identifiable {
         envelope.append(time: songTime, pitch: craftPitch, voiced: voiced)
 
         if FlightRules.shouldStall(quietDuration: quietDuration, elapsed: songTime) {
-            finish(.stalled, message: "You went silent. The craft stalled.")
+            finish(.stalled, message: "You went silent. The craft stalled — keep a tone going, even a quiet one.")
             return
         }
         if FlightRules.shouldCrash(
@@ -183,11 +183,11 @@ final class FlightController: ObservableObject, Identifiable {
             halfWidth: corridor.halfWidth,
             outsideDuration: outsideDuration
         ) {
-            finish(.crashed, message: "You left the song.")
+            finish(.crashed, message: "You left the gold ribbon. The land is the melody — match the written pitch.")
             return
         }
         if songTime >= terrain.duration {
-            finish(.cleared, message: "You flew the phrase.")
+            finish(.cleared, message: "You flew the phrase. Share this run so someone else can race your ghost.")
             ghost = envelope
             return
         }

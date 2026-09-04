@@ -6,19 +6,18 @@ struct HUDView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            HStack {
+            HStack(spacing: 12) {
                 Button("Menu") {
                     FeedbackManager.shared.play(.buttonTap)
                     onMenu()
                 }
                 .buttonStyle(.bordered)
 
-                Spacer()
-
                 Text(controller.melody.title)
                     .font(.subheadline.weight(.semibold))
-
-                Spacer()
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.85)
+                    .frame(maxWidth: .infinity, alignment: .leading)
 
                 Picker("Input", selection: $controller.inputMode) {
                     ForEach(InputMode.allCases) { mode in
@@ -26,31 +25,35 @@ struct HUDView: View {
                     }
                 }
                 .pickerStyle(.segmented)
-                .frame(maxWidth: 240)
+                .frame(maxWidth: 220)
             }
 
-            HStack(alignment: .center, spacing: 16) {
-                PitchNeedle(
-                    sung: controller.sungNormalized,
-                    target: controller.targetNormalized,
-                    halfWidth: controller.melody.corridorHalfWidth
-                )
-                .frame(width: 160, height: 36)
+            PitchNeedle(
+                sung: controller.sungNormalized,
+                target: controller.targetNormalized,
+                halfWidth: controller.melody.corridorHalfWidth
+            )
+            .frame(height: 28)
 
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(controller.statusMessage)
-                        .font(.caption)
-                    if controller.showDebugHUD || controller.livePitch.hz != nil {
-                        Text(debugLine)
-                            .font(.caption2.monospacedDigit())
-                            .foregroundStyle(.secondary)
-                    }
-                }
-                Spacer()
+            InstructionText(
+                text: controller.statusMessage,
+                font: .subheadline,
+                color: HumlineTheme.ink.opacity(0.9),
+                alignment: .leading
+            )
+
+            if controller.showDebugHUD || controller.livePitch.hz != nil {
+                Text(debugLine)
+                    .font(.caption2.monospacedDigit())
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
             }
         }
         .padding(.horizontal, 16)
-        .padding(.top, 10)
+        .padding(.vertical, 10)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(HumlineTheme.sky.opacity(0.82))
         .foregroundStyle(HumlineTheme.ink)
     }
 
@@ -80,8 +83,8 @@ struct PitchNeedle: View {
                     .offset(x: corridorMin * width)
                 Circle()
                     .fill(HumlineTheme.craft)
-                    .frame(width: height - 6, height: height - 6)
-                    .offset(x: min(width - height + 6, max(0, sung * width - (height - 6) / 2)))
+                    .frame(width: height - 4, height: height - 4)
+                    .offset(x: min(width - height + 4, max(0, sung * width - (height - 4) / 2)))
             }
         }
     }

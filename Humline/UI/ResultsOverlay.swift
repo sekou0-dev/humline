@@ -8,42 +8,53 @@ struct ResultsOverlay: View {
     var onMenu: () -> Void
 
     var body: some View {
-        VStack(spacing: 16) {
-            Text(title)
-                .font(.title.weight(.semibold))
-            Text(detail)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
+        ScrollView {
+            VStack(spacing: 16) {
+                Text(title)
+                    .font(.title.weight(.semibold))
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
 
-            HStack(spacing: 12) {
-                Button("Retry") {
-                    FeedbackManager.shared.play(.buttonTap)
-                    onRetry()
-                }
-                .buttonStyle(.borderedProminent)
+                InstructionText(text: detail)
 
-                if state == .cleared {
-                    Button("Beat my flight") {
-                        FeedbackManager.shared.play(.buttonTap)
-                        onShare()
-                    }
-                    .buttonStyle(.bordered)
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: 12) { buttons }
+                    VStack(spacing: 10) { buttons }
                 }
-
-                Button("Menu") {
-                    FeedbackManager.shared.play(.buttonTap)
-                    onMenu()
-                }
-                .buttonStyle(.bordered)
             }
+            .padding(24)
+            .frame(maxWidth: 520)
+            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+            .padding(20)
+            .frame(maxWidth: .infinity)
         }
-        .padding(28)
-        .frame(maxWidth: 480)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
-        .padding()
+        .scrollBounceBehavior(.basedOnSize)
+        .safeAreaPadding()
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.black.opacity(0.35).ignoresSafeArea())
+    }
+
+    @ViewBuilder
+    private var buttons: some View {
+        Button("Retry") {
+            FeedbackManager.shared.play(.buttonTap)
+            onRetry()
+        }
+        .buttonStyle(.borderedProminent)
+
+        if state == .cleared {
+            Button("Beat my flight") {
+                FeedbackManager.shared.play(.buttonTap)
+                onShare()
+            }
+            .buttonStyle(.bordered)
+        }
+
+        Button("Menu") {
+            FeedbackManager.shared.play(.buttonTap)
+            onMenu()
+        }
+        .buttonStyle(.bordered)
     }
 
     private var title: String {
