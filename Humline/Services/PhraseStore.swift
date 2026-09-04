@@ -44,6 +44,7 @@ final class PhraseStore: ObservableObject {
                 await apply(transaction)
                 await transaction.finish()
                 statusMessage = "Phrase pack unlocked."
+                HumlineAnalytics.signal("Store.phrasePack.purchased")
             case .userCancelled:
                 break
             case .pending:

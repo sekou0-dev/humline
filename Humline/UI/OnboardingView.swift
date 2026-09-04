@@ -19,7 +19,7 @@ struct OnboardingView: View {
 
                 Button(isLastPage ? "Start playing" : "Next") {
                     if isLastPage {
-                        complete()
+                        complete(skipped: false)
                     } else {
                         withAnimation { pageIndex += 1 }
                     }
@@ -29,7 +29,7 @@ struct OnboardingView: View {
                 .padding(.horizontal, 24)
 
                 if !isLastPage {
-                    Button("Skip") { complete() }
+                    Button("Skip") { complete(skipped: true) }
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                         .padding(.bottom, 4)
@@ -42,7 +42,7 @@ struct OnboardingView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Close") { complete() }
+                    Button("Close") { complete(skipped: true) }
                 }
             }
         }
@@ -55,9 +55,10 @@ struct OnboardingView: View {
         pageIndex == pages.count - 1
     }
 
-    private func complete() {
+    private func complete(skipped: Bool) {
         AppSettings.hasCompletedOnboarding = true
         FeedbackManager.shared.play(.buttonTap)
+        HumlineAnalytics.signal(skipped ? "Onboarding.skipped" : "Onboarding.completed")
         dismiss()
     }
 }

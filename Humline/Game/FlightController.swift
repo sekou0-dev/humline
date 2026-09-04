@@ -18,6 +18,12 @@ final class FlightController: ObservableObject, Identifiable {
         didSet {
             tracker.mode = inputMode
             AppSettings.inputMode = inputMode
+            if oldValue != inputMode {
+                HumlineAnalytics.signal("Input.modeChanged", parameters: [
+                    "inputMode": inputMode.rawValue,
+                    "previous": oldValue.rawValue,
+                ])
+            }
         }
     }
     @Published var calibration: VoiceCalibration
@@ -75,7 +81,7 @@ final class FlightController: ObservableObject, Identifiable {
         do {
             try tracker.start()
             tracker.onReading = { [weak self] reading in
-                self?.livePitch = reading
+                self?.ingest(reading)
             }
         } catch {
             statusMessage = "Microphone is unavailable. On Simulator, drag up and down on the screen to set pitch."
@@ -97,6 +103,7 @@ final class FlightController: ObservableObject, Identifiable {
         flightState = .armed
         statusMessage = "Hum the opening pitch, then stay inside the gold ribbon. Silence stalls. Leaving the ribbon crashes."
         awaitingVoice = true
+        HumlineAnalytics.signal("Phrase.started", parameters: phraseParameters(shared: ghost != nil))
     }
 
     func resetRun(keepGhost: Bool) {
@@ -117,6 +124,10 @@ final class FlightController: ObservableObject, Identifiable {
 
     func setManualPitch(_ value: Double?) {
         manualPitch = value.map { min(1, max(0, $0)) }
+    }
+
+    func ingest(_ reading: PitchReading) {
+        livePitch = reading
     }
 
     func tick(dt: TimeInterval) {
@@ -144,6 +155,7 @@ final class FlightController: ObservableObject, Identifiable {
                 flightState = .flying
                 awaitingVoice = false
                 statusMessage = "Stay inside the gold ribbon. Match the written pitch as the land rises and falls."
+                HumlineAnalytics.signal("Flight.started", parameters: phraseParameters(shared: ghost != nil))
             } else {
                 scene?.updatePlayhead(
                     time: 0,
@@ -214,5 +226,29 @@ final class FlightController: ObservableObject, Identifiable {
             targetPitch: terrain.sample(at: songTime).center
         )
         FeedbackManager.shared.play(state == .cleared ? .success : .fail)
+        let signalName: String
+        switch state {
+        case .stalled: signalName = "Flight.stalled"
+        case .crashed: signalName = "Flight.crashed"
+        case .cleared: signalName = "Flight.cleared"
+        default: return
+        }
+        HumlineAnalytics.signal(signalName, parameters: runParameters())
+    }
+
+    private func phraseParameters(shared: Bool) -> [String: String] {
+        [
+            "melodyId": melody.id,
+            "title": melody.title,
+            "inputMode": inputMode.rawValue,
+            "shared": shared ? "true" : "false",
+        ]
+    }
+
+    private func runParameters() -> [String: String] {
+        var parameters = phraseParameters(shared: ghost != nil)
+        parameters["duration"] = String(format: "%.2f", songTime)
+        parameters["progress"] = String(format: "%.2f", progress)
+        return parameters
     }
 }

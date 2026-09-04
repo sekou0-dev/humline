@@ -17,7 +17,15 @@ struct PitchGymView: View {
                     .pickerStyle(.segmented)
                     .onChange(of: mode) { _, newValue in
                         tracker.mode = newValue
+                        let previous = AppSettings.inputMode
                         AppSettings.inputMode = newValue
+                        if previous != newValue {
+                            HumlineAnalytics.signal("Input.modeChanged", parameters: [
+                                "inputMode": newValue.rawValue,
+                                "previous": previous.rawValue,
+                                "source": "gym",
+                            ])
+                        }
                     }
 
                     VStack(spacing: 8) {
