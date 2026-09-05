@@ -28,13 +28,17 @@ enum VoiceCalibrationStore {
     private static let key = "voiceCalibration"
 
     static func load() -> VoiceCalibration? {
-        guard let data = UserDefaults.standard.data(forKey: key) else { return nil }
+        guard let data = AppSettings.store.data(forKey: key) else { return nil }
         return try? JSONDecoder().decode(VoiceCalibration.self, from: data)
     }
 
     static func save(_ calibration: VoiceCalibration) {
         if let data = try? JSONEncoder().encode(calibration) {
-            UserDefaults.standard.set(data, forKey: key)
+            AppSettings.store.set(data, forKey: key)
         }
+    }
+
+    static func clear() {
+        AppSettings.store.removeObject(forKey: key)
     }
 }

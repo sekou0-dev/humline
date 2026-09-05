@@ -5,7 +5,7 @@ struct MenuView: View {
     @State private var phrases: [Melody] = MelodyLibrary.loadBundled()
     @State private var cover: Cover?
     @State private var pendingStart: (() -> Void)?
-    @AppStorage("hapticsEnabled") private var hapticsEnabled = true
+    @State private var hapticsEnabled = AppSettings.hapticsEnabled
 
     private enum Cover: Identifiable {
         case onboarding
@@ -112,6 +112,7 @@ struct MenuView: View {
             .foregroundStyle(HumlineTheme.ink)
             .onAppear {
                 phrases = MelodyLibrary.loadBundled()
+                hapticsEnabled = AppSettings.hapticsEnabled
                 if !AppSettings.hasCompletedOnboarding {
                     cover = .onboarding
                 }
@@ -192,6 +193,10 @@ private struct PhraseRow: View {
         .buttonStyle(.plain)
         .disabled(!unlocked)
         .opacity(unlocked ? 1 : 0.55)
+        .accessibilityLabel(melody.title)
+        .accessibilityIdentifier(melody.id)
+        .accessibilityValue(unlocked ? "\(Int(melody.duration)) seconds" : "Locked")
+        .accessibilityHint(melody.detail)
     }
 }
 
