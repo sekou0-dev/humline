@@ -54,6 +54,8 @@ enum YinDetector {
         }
         guard found, tau < tauMax else { return nil }
 
+        tau = preferHigherOctave(tau: tau, cmnd: cmnd, tauMin: tauMin, threshold: threshold)
+
         var betterTau = Double(tau)
         if tau > 1, tau < tauMax {
             let s0 = Double(cmnd[tau - 1])
@@ -69,6 +71,23 @@ enum YinDetector {
         guard hz.isFinite, hz >= minFrequency * 0.9, hz <= maxFrequency * 1.1 else { return nil }
         let confidence = max(0, min(1, 1 - Double(cmnd[tau])))
         return (hz, confidence)
+    }
+
+    /// If a shorter period is also a YIN minimum, take it so a rising hum is not reported an octave down.
+    private static func preferHigherOctave(tau: Int, cmnd: [Float], tauMin: Int, threshold: Float) -> Int {
+        var chosen = tau
+        var half = tau / 2
+        while half >= tauMin {
+            let isLocalMin = (half <= 1 || cmnd[half - 1] >= cmnd[half])
+                && (half + 1 >= cmnd.count || cmnd[half + 1] >= cmnd[half])
+            if isLocalMin, cmnd[half] < threshold * 1.25 {
+                chosen = half
+                half = chosen / 2
+            } else {
+                break
+            }
+        }
+        return chosen
     }
 
     static func rms(samples: [Float]) -> Double {

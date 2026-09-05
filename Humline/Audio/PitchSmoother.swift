@@ -9,7 +9,7 @@ final class PitchSmoother: @unchecked Sendable {
     private var dxHat: Double = 0
     private var lastTime: Double?
 
-    init(minCutoff: Double = 1.2, beta: Double = 0.007, dCutoff: Double = 1.0) {
+    init(minCutoff: Double = 2.8, beta: Double = 0.04, dCutoff: Double = 1.0) {
         self.minCutoff = minCutoff
         self.beta = beta
         self.dCutoff = dCutoff
@@ -29,6 +29,11 @@ final class PitchSmoother: @unchecked Sendable {
             return hz
         }
         let dt = max(timestamp - lastTime, 1e-4)
+        if abs(value - previous) >= 3.0 / 12.0 {
+            xHat = value
+            dxHat = 0
+            return hz
+        }
         let dx = (value - previous) / dt
         dxHat = lowpass(current: dx, previous: dxHat, cutoff: dCutoff, dt: dt)
         let cutoff = minCutoff + beta * abs(dxHat)

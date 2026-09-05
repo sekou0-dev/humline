@@ -165,33 +165,70 @@ final class PitchAnalyzer: @unchecked Sendable {
     }
 
     func process(samples: [Float], sampleRate: Double, hostTime: UInt64) -> PitchReading {
+        process(samples: samples, sampleRate: sampleRate, timestamp: seconds(fromHostTime: hostTime))
+    }
+
+    func process(samples: [Float], sampleRate: Double, timestamp: TimeInterval) -> PitchReading {
         lock.lock()
+        defer { lock.unlock() }
         let mode = _mode
-        let timestamp = seconds(fromHostTime: hostTime)
-        var reading = PitchTracker.analyze(
+        let reading = PitchTracker.analyze(
             samples: samples,
             sampleRate: sampleRate,
             mode: mode,
             smoother: smoother,
             timestamp: timestamp
         )
-        if reading.voiced {
+        return continuePitchLocked(reading, mode: mode)
+    }
+
+    /// Hold the last note through a brief Yin dropout, but never overwrite a newly detected Hz.
+    func continuePitch(_ reading: PitchReading, mode: InputMode? = nil) -> PitchReading {
+        lock.lock()
+        defer { lock.unlock() }
+        return continuePitchLocked(reading, mode: mode ?? _mode)
+    }
+
+    private func continuePitchLocked(_ reading: PitchReading, mode: InputMode) -> PitchReading {
+        var reading = reading
+        let previousHz = held?.hz
+
+        if let newHz = reading.hz, reading.rms >= mode.unvoicedFloor {
+            if let previousHz, newHz > 20 {
+                let ratio = previousHz / newHz
+                if ratio > 1.85, ratio < 2.25, mode.frequencyRange.contains(newHz * 2) {
+                    let doubled = newHz * 2
+                    reading = PitchReading(
+                        hz: doubled,
+                        midi: YinDetector.midi(fromHz: doubled),
+                        rms: reading.rms,
+                        confidence: max(reading.confidence, 0.4),
+                        voiced: true,
+                        timestamp: reading.timestamp
+                    )
+                }
+            }
             held = reading
-        } else if reading.rms >= mode.unvoicedFloor,
-                  let held,
-                  timestamp - held.timestamp <= Self.holdDuration {
-            reading = PitchReading(
+            return reading
+        }
+
+        if reading.hz == nil,
+           reading.rms >= mode.unvoicedFloor,
+           let held,
+           reading.timestamp - held.timestamp <= Self.holdDuration {
+            return PitchReading(
                 hz: held.hz,
                 midi: held.midi,
                 rms: reading.rms,
                 confidence: held.confidence,
                 voiced: true,
-                timestamp: timestamp
+                timestamp: reading.timestamp
             )
-        } else if reading.rms < mode.unvoicedFloor {
+        }
+
+        if reading.rms < mode.unvoicedFloor {
             self.held = nil
         }
-        lock.unlock()
         return reading
     }
 

@@ -19,6 +19,13 @@ struct YinDetectorTests {
         #expect(abs((reading.hz ?? 0) - 330) < 6)
     }
 
+    @Test func detectsHighHumSine() {
+        let samples = sine(hz: 520, sampleRate: 44_100, count: 4096)
+        let reading = PitchTracker.analyze(samples: samples, sampleRate: 44_100, mode: .hum)
+        #expect(reading.voiced)
+        #expect(abs((reading.hz ?? 0) - 520) < 10)
+    }
+
     @Test func detectsWhistleSine() {
         let samples = sine(hz: 880, sampleRate: 44_100, count: 4096)
         let reading = PitchTracker.analyze(samples: samples, sampleRate: 44_100, mode: .whistle)
@@ -52,6 +59,7 @@ struct VoiceCalibrationTests {
         #expect(abs(calibration.normalizedPitch(hz: 330) - 1) < 0.001)
         #expect(calibration.normalizedPitch(hz: 190.5) > 0.3)
         #expect(calibration.normalizedPitch(hz: 190.5) < 0.7)
+        #expect(calibration.normalizedPitch(hz: 280) >= 0.95)
     }
 
     @Test func midiNormalizedUsesMelodySpan() {
@@ -147,7 +155,7 @@ struct FlightRulesTests {
     @Test func crashOutsideCorridorAfterGrace() {
         #expect(!FlightRules.shouldCrash(sung: 0.5, center: 0.5, halfWidth: 0.1, outsideDuration: 1))
         #expect(!FlightRules.shouldCrash(sung: 0.8, center: 0.5, halfWidth: 0.1, outsideDuration: 0.01))
-        #expect(FlightRules.shouldCrash(sung: 0.8, center: 0.5, halfWidth: 0.1, outsideDuration: 0.08))
+        #expect(FlightRules.shouldCrash(sung: 0.8, center: 0.5, halfWidth: 0.1, outsideDuration: FlightRules.crashGrace))
     }
 
     @Test func easeMovesTowardTarget() {
