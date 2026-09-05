@@ -138,9 +138,9 @@ struct TerrainBuilderTests {
 
 struct FlightRulesTests {
     @Test func stallAfterSilencePastGrace() {
-        #expect(!FlightRules.shouldStall(quietDuration: 0.18, elapsed: 0.2))
+        #expect(!FlightRules.shouldStall(quietDuration: FlightRules.stallSilence, elapsed: 0.2))
         #expect(!FlightRules.shouldStall(quietDuration: 0.5, elapsed: 0.2))
-        #expect(FlightRules.shouldStall(quietDuration: 0.18, elapsed: 0.5))
+        #expect(FlightRules.shouldStall(quietDuration: FlightRules.stallSilence, elapsed: 0.5))
         #expect(!FlightRules.shouldStall(quietDuration: 0.05, elapsed: 1))
     }
 

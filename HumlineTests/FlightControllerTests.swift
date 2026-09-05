@@ -62,10 +62,34 @@ struct FlightControllerTests {
         controller.arm()
         fly(controller, pitch: 0.5, seconds: 0.05)
         controller.setManualPitch(nil)
-        fly(controller, pitch: nil, seconds: 0.6)
+        controller.ingest(.silent)
+        fly(controller, pitch: nil, seconds: 0.8)
         #expect(controller.flightState == .stalled)
         #expect(controller.statusMessage.contains("silent"))
         #expect(controller.flightState.isTerminal)
+    }
+
+    @Test func energyWithoutPitchLockDoesNotStall() {
+        let controller = makeController()
+        controller.arm()
+        fly(controller, pitch: 0.5, seconds: 0.05)
+        controller.setManualPitch(nil)
+        let tone = PitchReading(
+            hz: nil,
+            midi: nil,
+            rms: 0.02,
+            confidence: 0,
+            voiced: false,
+            timestamp: 1
+        )
+        var elapsed: TimeInterval = 0
+        while elapsed < 0.8, !controller.flightState.isTerminal {
+            controller.ingest(tone)
+            controller.tick(dt: 0.05)
+            elapsed += 0.05
+        }
+        #expect(controller.flightState == .flying)
+        #expect(!controller.statusMessage.contains("silent"))
     }
 
     @Test func leavingTheRibbonCrashes() {

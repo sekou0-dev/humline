@@ -137,21 +137,29 @@ final class FlightController: ObservableObject, Identifiable {
         let corridor = terrain.sample(at: songTime)
         targetNormalized = corridor.center
 
-        let voiced: Bool
         let mapped: Double
+        let hasTone: Bool
+        let pitched: Bool
         if livePitch.voiced, let hz = livePitch.hz {
             mapped = calibration.normalizedPitch(hz: hz)
-            voiced = true
+            hasTone = true
+            pitched = true
         } else if let manualPitch {
             mapped = manualPitch
-            voiced = true
+            hasTone = true
+            pitched = true
+        } else if livePitch.rms >= inputMode.unvoicedFloor {
+            mapped = craftPitch
+            hasTone = true
+            pitched = false
         } else {
             mapped = craftPitch
-            voiced = false
+            hasTone = false
+            pitched = false
         }
 
         if flightState == .armed || awaitingVoice {
-            if voiced {
+            if hasTone {
                 flightState = .flying
                 awaitingVoice = false
                 statusMessage = "Stay inside the gold ribbon. Match the written pitch as the land rises and falls."
@@ -171,7 +179,7 @@ final class FlightController: ObservableObject, Identifiable {
         craftPitch = FlightRules.ease(current: craftPitch, target: mapped, dt: dt)
         sungNormalized = craftPitch
 
-        if voiced {
+        if hasTone {
             quietDuration = 0
         } else {
             quietDuration += dt
@@ -183,7 +191,7 @@ final class FlightController: ObservableObject, Identifiable {
             outsideDuration = 0
         }
 
-        envelope.append(time: songTime, pitch: craftPitch, voiced: voiced)
+        envelope.append(time: songTime, pitch: craftPitch, voiced: pitched)
 
         if FlightRules.shouldStall(quietDuration: quietDuration, elapsed: songTime) {
             finish(.stalled, message: "You went silent. The craft stalled — keep a tone going, even a quiet one.")
