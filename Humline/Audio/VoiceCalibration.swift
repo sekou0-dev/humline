@@ -10,12 +10,16 @@ struct VoiceCalibration: Codable, Equatable, Sendable {
         highHz > lowHz * 1.25
     }
 
+    /// Comfortable high reaches the land top without needing the strained ceiling of the calibrated range.
+    private static let playableHighFraction = 0.82
+
     /// Map a sung frequency onto 0...1 using the player's own range (log2).
     func normalizedPitch(hz: Double) -> Double {
         let lo = log2(max(lowHz, 20))
         let hi = log2(max(highHz, lowHz * 1.01))
+        let playableHi = lo + (hi - lo) * Self.playableHighFraction
         let value = log2(max(hz, 20))
-        return min(1, max(0, (value - lo) / (hi - lo)))
+        return min(1, max(0, (value - lo) / (playableHi - lo)))
     }
 
     static func midiNormalized(_ midi: Double, minMidi: Double, maxMidi: Double) -> Double {

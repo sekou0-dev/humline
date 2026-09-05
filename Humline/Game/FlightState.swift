@@ -24,8 +24,8 @@ enum FlightState: Equatable, Sendable {
 enum FlightRules {
     static let stallSilence: TimeInterval = 0.4
     static let startGrace: TimeInterval = 0.45
-    static let crashGrace: TimeInterval = 0.08
-    static let craftFollowRate: Double = 10
+    static let crashGrace: TimeInterval = 0.12
+    static let craftFollowRate: Double = 18
     static let pixelsPerBeat: CGFloat = 160
     static let craftXFraction: CGFloat = 0.22
     static let craftRadius: CGFloat = 11

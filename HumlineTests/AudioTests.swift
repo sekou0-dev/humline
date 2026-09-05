@@ -5,7 +5,7 @@ import Testing
 struct InputModeTests {
     @Test func casesHaveDistinctRanges() {
         #expect(InputMode.hum.frequencyRange.lowerBound == 70)
-        #expect(InputMode.hum.frequencyRange.upperBound == 450)
+        #expect(InputMode.hum.frequencyRange.upperBound == 620)
         #expect(InputMode.whistle.frequencyRange.lowerBound == 700)
         #expect(InputMode.whistle.frequencyRange.upperBound == 2800)
         #expect(InputMode.hum.frequencyRange.upperBound < InputMode.whistle.frequencyRange.lowerBound)
@@ -34,12 +34,19 @@ struct PitchSmootherTests {
         #expect(smoother.filter(hz: 220, timestamp: 0) == 220)
     }
 
-    @Test func attenuatesASuddenJump() {
+    @Test func attenuatesASmallStep() {
         let smoother = PitchSmoother()
         _ = smoother.filter(hz: 220, timestamp: 0)
-        let next = smoother.filter(hz: 440, timestamp: 0.01)
+        let next = smoother.filter(hz: 233, timestamp: 0.01)
         #expect(next > 220)
-        #expect(next < 440)
+        #expect(next < 233)
+    }
+
+    @Test func snapsThroughALeap() {
+        let smoother = PitchSmoother()
+        _ = smoother.filter(hz: 220, timestamp: 0)
+        let next = smoother.filter(hz: 330, timestamp: 0.01)
+        #expect(abs(next - 330) < 0.001)
     }
 
     @Test func resetAllowsPassThroughAgain() {
@@ -87,7 +94,7 @@ struct YinEdgeTests {
             timestamp: 0
         )
         let b = PitchTracker.analyze(
-            samples: TestFixtures.sine(hz: 330),
+            samples: TestFixtures.sine(hz: 233),
             sampleRate: 44_100,
             mode: .hum,
             smoother: smoother,
@@ -95,7 +102,7 @@ struct YinEdgeTests {
         )
         #expect(a.voiced)
         #expect(b.voiced)
-        #expect(abs((b.hz ?? 0) - 330) > 1)
+        #expect(abs((b.hz ?? 0) - 233) > 1)
     }
 
     @Test func quietToneIsUnvoiced() {
@@ -103,5 +110,71 @@ struct YinEdgeTests {
         let reading = PitchTracker.analyze(samples: samples, sampleRate: 44_100, mode: .hum)
         #expect(!reading.voiced)
         #expect(reading.hz == nil)
+    }
+}
+
+struct PitchContinuityTests {
+    @Test func holdDoesNotReplaceANewlyDetectedFrequency() {
+        let analyzer = PitchAnalyzer()
+        _ = analyzer.continuePitch(PitchReading(
+            hz: 220,
+            midi: YinDetector.midi(fromHz: 220),
+            rms: 0.2,
+            confidence: 0.9,
+            voiced: true,
+            timestamp: 0
+        ))
+        let climbed = analyzer.continuePitch(PitchReading(
+            hz: 330,
+            midi: YinDetector.midi(fromHz: 330),
+            rms: 0.01,
+            confidence: 0.3,
+            voiced: false,
+            timestamp: 0.05
+        ))
+        #expect(abs((climbed.hz ?? 0) - 330) < 0.001)
+    }
+
+    @Test func holdKeepsPitchWhenYinDropsOut() {
+        let analyzer = PitchAnalyzer()
+        _ = analyzer.continuePitch(PitchReading(
+            hz: 220,
+            midi: YinDetector.midi(fromHz: 220),
+            rms: 0.2,
+            confidence: 0.9,
+            voiced: true,
+            timestamp: 0
+        ))
+        let held = analyzer.continuePitch(PitchReading(
+            hz: nil,
+            midi: nil,
+            rms: 0.02,
+            confidence: 0,
+            voiced: false,
+            timestamp: 0.1
+        ))
+        #expect(abs((held.hz ?? 0) - 220) < 0.001)
+        #expect(held.voiced)
+    }
+
+    @Test func doublesAnOctaveDropAgainstThePreviousNote() {
+        let analyzer = PitchAnalyzer()
+        _ = analyzer.continuePitch(PitchReading(
+            hz: 220,
+            midi: YinDetector.midi(fromHz: 220),
+            rms: 0.2,
+            confidence: 0.9,
+            voiced: true,
+            timestamp: 0
+        ))
+        let recovered = analyzer.continuePitch(PitchReading(
+            hz: 112,
+            midi: YinDetector.midi(fromHz: 112),
+            rms: 0.15,
+            confidence: 0.5,
+            voiced: true,
+            timestamp: 0.04
+        ))
+        #expect(abs((recovered.hz ?? 0) - 224) < 0.001)
     }
 }

@@ -140,7 +140,7 @@ final class FlightController: ObservableObject, Identifiable {
         let mapped: Double
         let hasTone: Bool
         let pitched: Bool
-        if livePitch.voiced, let hz = livePitch.hz {
+        if let hz = livePitch.hz {
             mapped = calibration.normalizedPitch(hz: hz)
             hasTone = true
             pitched = true

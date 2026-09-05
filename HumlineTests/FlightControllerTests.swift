@@ -163,6 +163,25 @@ struct FlightControllerTests {
         #expect(controller.sungNormalized > 0.5)
     }
 
+    @Test func unvoicedHighPitchStillClimbs() {
+        let controller = makeController()
+        controller.calibration = VoiceCalibration(lowHz: 110, highHz: 330)
+        controller.arm()
+        controller.ingest(PitchReading(
+            hz: 330,
+            midi: YinDetector.midi(fromHz: 330),
+            rms: 0.01,
+            confidence: 0.25,
+            voiced: false,
+            timestamp: 1
+        ))
+        for _ in 0..<2 {
+            controller.tick(dt: 0.05)
+        }
+        #expect(controller.flightState == .flying)
+        #expect(controller.sungNormalized > 0.7)
+    }
+
     private func makeController() -> FlightController {
         FlightController(
             melody: TestFixtures.drone,

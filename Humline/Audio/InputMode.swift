@@ -23,7 +23,7 @@ enum InputMode: String, Codable, CaseIterable, Identifiable, Sendable {
     /// Search window for Yin, in Hz.
     var frequencyRange: ClosedRange<Double> {
         switch self {
-        case .hum: 70...450
+        case .hum: 70...620
         case .whistle: 700...2800
         }
     }
