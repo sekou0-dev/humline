@@ -23,7 +23,7 @@ enum InputMode: String, Codable, CaseIterable, Identifiable, Sendable {
     /// Search window for Yin, in Hz.
     var frequencyRange: ClosedRange<Double> {
         switch self {
-        case .hum: 80...420
+        case .hum: 70...450
         case .whistle: 700...2800
         }
     }
@@ -31,12 +31,20 @@ enum InputMode: String, Codable, CaseIterable, Identifiable, Sendable {
     /// RMS floor. Throat-hum is quieter than a sung note.
     var energyFloor: Double {
         switch self {
-        case .hum: 0.004
-        case .whistle: 0.003
+        case .hum: 0.0025
+        case .whistle: 0.002
         }
     }
 
     var unvoicedFloor: Double {
-        energyFloor * 0.55
+        energyFloor * 0.5
+    }
+
+    /// YIN CMND cutoff. Throat-hum is noisier than a whistle, so allow a slightly weaker period.
+    var yinThreshold: Float {
+        switch self {
+        case .hum: 0.18
+        case .whistle: 0.15
+        }
     }
 }

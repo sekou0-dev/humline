@@ -4,8 +4,8 @@ import Testing
 
 struct InputModeTests {
     @Test func casesHaveDistinctRanges() {
-        #expect(InputMode.hum.frequencyRange.lowerBound == 80)
-        #expect(InputMode.hum.frequencyRange.upperBound == 420)
+        #expect(InputMode.hum.frequencyRange.lowerBound == 70)
+        #expect(InputMode.hum.frequencyRange.upperBound == 450)
         #expect(InputMode.whistle.frequencyRange.lowerBound == 700)
         #expect(InputMode.whistle.frequencyRange.upperBound == 2800)
         #expect(InputMode.hum.frequencyRange.upperBound < InputMode.whistle.frequencyRange.lowerBound)
