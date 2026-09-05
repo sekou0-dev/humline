@@ -44,7 +44,8 @@ final class PitchTracker: ObservableObject {
                 sampleRate: buffer.format.sampleRate,
                 hostTime: time.hostTime
             )
-            Task { @MainActor in
+            Task { @MainActor [weak self] in
+                guard let self else { return }
                 self.latest = reading
                 self.onReading?(reading)
             }
@@ -57,9 +58,10 @@ final class PitchTracker: ObservableObject {
             forName: AVAudioSession.interruptionNotification,
             object: session,
             queue: .main
-        ) { [weak self] notification in
-            Task { @MainActor in
-                self?.handleInterruption(notification)
+        ) { notification in
+            let rawType = notification.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt
+            Task { @MainActor [weak self] in
+                self?.handleInterruption(rawType: rawType)
             }
         }
     }
@@ -119,9 +121,8 @@ final class PitchTracker: ObservableObject {
         )
     }
 
-    private func handleInterruption(_ notification: Notification) {
-        let typeValue = notification.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt
-        guard let typeValue, let type = AVAudioSession.InterruptionType(rawValue: typeValue) else { return }
+    private func handleInterruption(rawType: UInt?) {
+        guard let rawType, let type = AVAudioSession.InterruptionType(rawValue: rawType) else { return }
         if type == .ended {
             try? engine.start()
         }
