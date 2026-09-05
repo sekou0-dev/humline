@@ -10,8 +10,12 @@ final class FeedbackManager {
         case fail
     }
 
+    private let isTestEnvironment = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+        || ProcessInfo.processInfo.environment["XCTestBundlePath"] != nil
+        || ProcessInfo.processInfo.environment["XCTestSessionIdentifier"] != nil
+
     func play(_ event: Event) {
-        guard AppSettings.hapticsEnabled else { return }
+        guard !isTestEnvironment, AppSettings.hapticsEnabled else { return }
         switch event {
         case .buttonTap:
             UIImpactFeedbackGenerator(style: .light).impactOccurred()

@@ -75,7 +75,7 @@ enum TestSupport {
     static func withRestoredSettings(_ body: () throws -> Void) rethrows {
         settingsLock.lock()
         defer { settingsLock.unlock() }
-        let defaults = UserDefaults.standard
+        let defaults = AppSettings.store
         let snapshot: [String: Any] = settingKeys.reduce(into: [:]) { dict, key in
             if let value = defaults.object(forKey: key) {
                 dict[key] = value
